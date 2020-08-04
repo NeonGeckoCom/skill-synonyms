@@ -1,0 +1,1 @@
+(make|set|add) (?P<syn_phrase>.*)( as a| as| a) synonym (to |for )(?P<cmd_phrase>.*)
