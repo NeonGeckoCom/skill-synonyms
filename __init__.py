@@ -203,25 +203,28 @@ class SynonymsSkill(MycroftSkill):
         """
 
         # TODO: Substitutions currently handled in listener
-        sentence = message.data.get('utterances')[0]
-        LOG.info(sentence)
+        if message.data.get("utterances"):
+            sentence = message.data.get('utterances')[0]
+            LOG.info(sentence)
 
-        # if [x for x in ['make', 'set', 'add'] if x in sentence] and 'synonym' in sentence:
-        #     payload = {
-        #         'utterances': sentence,
-        #         'flac_filename': message.context["flac_filename"]
-        #     }
-        #     self.bus.emit(Message("recognizer_loop:utterance", payload))
+            # if [x for x in ['make', 'set', 'add'] if x in sentence] and 'synonym' in sentence:
+            #     payload = {
+            #         'utterances': sentence,
+            #         'flac_filename': message.context["flac_filename"]
+            #     }
+            #     self.bus.emit(Message("recognizer_loop:utterance", payload))
 
-        LOG.info(message.data)
-        pref_speech = self.preference_speech(message)
-        LOG.info(pref_speech['synonyms'].items())
-        syn_exists = [x for x, y in pref_speech['synonyms'].items()
-                      if message.data.get('utterances')[0] in y
-                      and message.data.get('utterances')[0] != x]
+            LOG.info(message.data)
+            pref_speech = self.preference_speech(message)
+            LOG.info(pref_speech['synonyms'].items())
+            syn_exists = [x for x, y in pref_speech['synonyms'].items()
+                          if message.data.get('utterances')[0] in y
+                          and message.data.get('utterances')[0] != x]
+            # if not syn_exists:
+            #     return False
+        else:
+            syn_exists = False
         LOG.info(syn_exists)
-        # if not syn_exists:
-        #     return False
         if syn_exists:
             LOG.info(syn_exists)
             # audiofile = message.data.get("cc_data", {}).get("audio_file")
