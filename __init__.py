@@ -185,6 +185,8 @@ class SynonymsSkill(MycroftSkill):
 
     def converse(self, utterances, lang="en-us", message=None):
         LOG.debug(f"Check Synonyms: {utterances}")
+        if not utterances:
+            return False
         # TODO: Check for signal user running script and return false
         try:
             handled_as_existing = self.handle_syn_utterance(message)
