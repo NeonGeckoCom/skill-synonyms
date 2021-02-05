@@ -1,33 +1,33 @@
-# ![](https://0000.us/klatchat/app/files/neon_images/icons/neon_paw.png)Synonyms
+# <img src='https://0000.us/klatchat/app/files/neon_images/icons/neon_skill.png' card_color="#FF8600" width="50" style="vertical-align:bottom">Synonyms
 
-# Summary
+## Summary
 This skill handles setting and calling synonym commands
 
-# Requirements
+## Requirements
 
 No special required packages for this skill.
 
-# Description
+## Description
 You may define a phrase as a synonym for a Neon command. This skill handles creating synonym phrases as well as handling 
 heard synonyms
 
-# How to Use
+## Examples
 
 - "Make 'good morning' a synonym for what is the weather."
 
 
-# Location
+## Location
 
 
-# Files
+## Files
 
 
   
 
-# Class Diagram
+## Class Diagram
 
 
-# Available Intents
+## Available Intents
 <details>
 <summary>Click to expand.</summary>
 <br>
@@ -35,7 +35,7 @@ heard synonyms
 
 </details>
 
-# Examples
+## Details
 
 ### Text
 
@@ -46,11 +46,11 @@ heard synonyms
 
   
 
-# Contact Support
+## Contact Support
 
 Use the [link](https://neongecko.com/ContactUs) or [submit an issue on GitHub](https://help.github.com/en/articles/creating-an-issue)
 
-# Credits
+## Credits
 
 [NeonDaniel](https://github.com/neondaniel) [reginaneon](https://github.com/reginaneon) [neongeckocom](https://neongecko.com/) Mycroft AI
 
