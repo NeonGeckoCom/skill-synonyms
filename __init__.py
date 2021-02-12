@@ -58,11 +58,6 @@ class SynonymsSkill(MycroftSkill):
         :return:
         """
         try:
-            pref_speech = self.preference_speech(message)
-
-            LOG.debug(f"{message.data}, {message.context}")
-            LOG.debug(f"{syn_phrase} => {cmd_phrase}")
-
             # Parse and add emitted synonyms (not skill intent)
             if not syn_phrase or not cmd_phrase:
                 # This has a parsed pair from CC skill script
@@ -77,27 +72,28 @@ class SynonymsSkill(MycroftSkill):
                         #     new.extend(self.user_info_available['speech']['synonyms'][existing])
 
                         # This list is different than the existing one, update config
-                        if syn_phrases != pref_speech['synonyms'].get(cmd_phrase):
-                            old_synonyms = pref_speech['synonyms'].get(cmd_phrase, [])
+                        if syn_phrases != self.preference_skill(message).get("synonyms").get(cmd_phrase):
+                            old_synonyms = self.preference_skill(message).get("synonyms").get(cmd_phrase, [])
                             list(syn_phrases).extend(old_synonyms)
                             LOG.info(f"{cmd_phrase}: {syn_phrases}")
-                            updated_synonyms = {**pref_speech['synonyms'], **{cmd_phrase: syn_phrases}}
+                            updated_synonyms = {**self.preference_skill(message).get("synonyms"), **{cmd_phrase: syn_phrases}}
                             LOG.debug(f"synonyms={updated_synonyms}")
-                            if self.server:
-                                user_dict = self.build_user_dict(message)
-                                user_dict["synonyms"] = updated_synonyms
-                                self.socket_io_emit(event="update profile", kind="skill",
-                                                    flac_filename=message.context["flac_filename"], message=user_dict)
-                            else:
-                                # Update local synonyms dict
-                                self.user_info_available["speech"]["synonyms"] = updated_synonyms
-                                # Write file changes
-                                self.user_config.update_yaml_file(header='speech', sub_header='synonyms',
-                                                                  value=updated_synonyms)
+                            self.ngi_settings.update_yaml_file("synonyms", value=updated_synonyms, final=True)
+                            # if self.server:
+                            #     user_dict = self.build_user_dict(message)
+                            #     user_dict["synonyms"] = updated_synonyms
+                            #     self.socket_io_emit(event="update profile", kind="skill",
+                            #                         flac_filename=message.context["flac_filename"], message=user_dict)
+                            # else:
+                            #     # Update local synonyms dict
+                            #     self.user_info_available["speech"]["synonyms"] = updated_synonyms
+                            #     # Write file changes
+                            #     self.user_config.update_yaml_file(header='speech', sub_header='synonyms',
+                            #                                       value=updated_synonyms)
 
-                                # Don't need to emit because no other skill cares about synonyms
-                                # self.bus.emit(Message('check.yml.updates',
-                                #                       {"modified": ["ngi_user_info"]}, {"origin": "synonyms.neon"}))
+                            # Don't need to emit because no other skill cares about synonyms
+                            # self.bus.emit(Message('check.yml.updates',
+                            #                       {"modified": ["ngi_user_info"]}, {"origin": "synonyms.neon"}))
                             # syn_phrase.extend(pref_speech['synonyms'][cmd_phrase])
                     except Exception as e:
                         LOG.error(e)
@@ -129,50 +125,51 @@ class SynonymsSkill(MycroftSkill):
 
             # Check if spoken request is a valid synonym pair
             if syn_phrase != cmd_phrase:
-                if syn_phrase in pref_speech['synonyms'].keys():
+                if syn_phrase in self.preference_skill(message).get("synonyms").keys():
                     self.speak_dialog('new_is_another_key', {"syn_phrase": syn_phrase.title()}, private=True)
                     return
-                if syn_phrase in pref_speech['synonyms'].values():
+                if syn_phrase in self.preference_skill(message).get("synonyms").values():
                     self.speak_dialog('new_is_another_value',
                                       {"syn_phrase": syn_phrase.title(),
-                                       "cmd_phrase": [x for x, y in pref_speech['synonyms'].items()
+                                       "cmd_phrase": [x for x, y in self.preference_skill(message).get("synonyms").items()
                                                       if syn_phrase in y][0]}, private=True)
                     return
-                if cmd_phrase not in pref_speech['synonyms'].keys():
+                if cmd_phrase not in self.preference_skill(message).get("synonyms").keys():
                     self.speak_dialog("new_synonym", {"syn_phrase": syn_phrase,
                                                       "cmd_phrase": cmd_phrase}, private=True)
                     if not isinstance(syn_phrase, list):
                         syn_phrase = [syn_phrase]
                 else:
-                    if syn_phrase in pref_speech['synonyms'][cmd_phrase]:
+                    if syn_phrase in self.preference_skill(message).get("synonyms")[cmd_phrase]:
                         self.speak_dialog('already_exists', {"syn_phrase": syn_phrase.title(),
                                                              "cmd_phrase": cmd_phrase}, private=True)
                         return
 
                     self.speak_dialog("already_filled",
                                       {"syn_phrase": syn_phrase,
-                                       'already_filled': ", ".join(pref_speech['synonyms'][cmd_phrase]),
+                                       'already_filled': ", ".join(self.preference_skill(message).get("synonyms")[cmd_phrase]),
                                        "cmd_phrase": cmd_phrase}, private=True)
                     LOG.info(syn_phrase)
-                    LOG.info(pref_speech['synonyms'][cmd_phrase])
+                    LOG.info(self.preference_skill(message).get("synonyms")[cmd_phrase])
                     if not isinstance(syn_phrase, list):
                         syn_phrase = [syn_phrase]
-                    syn_phrase.extend(pref_speech['synonyms'][cmd_phrase])
+                    syn_phrase.extend(self.preference_skill(message).get("synonyms")[cmd_phrase])
                     LOG.info(syn_phrase)
-                    LOG.info(pref_speech['synonyms'][cmd_phrase])
+                    LOG.info(self.preference_skill(message).get("synonyms")[cmd_phrase])
                 if not syn_phrase and not cmd_phrase:
                     raise TypeError
 
-                updated_synonyms = {**pref_speech['synonyms'], **{cmd_phrase: syn_phrase}}
-                if self.server:
-                    user_dict = self.build_user_dict(message)
-                    user_dict["synonyms"] = updated_synonyms
-                    self.socket_io_emit(event="update profile", kind="skill",
-                                        flac_filename=message.context["flac_filename"], message=user_dict)
-                else:
-                    self.user_config.update_yaml_file(header='speech', sub_header='synonyms', value=updated_synonyms)
-                    self.bus.emit(Message('check.yml.updates',
-                                          {"modified": ["ngi_user_info"]}, {"origin": "synonyms.neon"}))
+                updated_synonyms = {**self.preference_skill(message).get("synonyms"), **{cmd_phrase: syn_phrase}}
+                # TODO: Settings update write!
+                # if self.server:
+                #     user_dict = self.build_user_dict(message)
+                #     user_dict["synonyms"] = updated_synonyms
+                #     self.socket_io_emit(event="update profile", kind="skill",
+                #                         flac_filename=message.context["flac_filename"], message=user_dict)
+                # else:
+                #     self.user_config.update_yaml_file(header='speech', sub_header='synonyms', value=updated_synonyms)
+                #     self.bus.emit(Message('check.yml.updates',
+                #                           {"modified": ["ngi_user_info"]}, {"origin": "synonyms.neon"}))
 
             # This is not a valid spoken request
             else:
@@ -206,7 +203,7 @@ class SynonymsSkill(MycroftSkill):
 
         # TODO: Substitutions currently handled in listener
         if message.data.get("utterances"):
-            sentence = message.data.get('utterances')[0]
+            sentence = message.data.get('utterances')[0].lower()
             LOG.info(sentence)
 
             # if [x for x in ['make', 'set', 'add'] if x in sentence] and 'synonym' in sentence:
@@ -217,11 +214,11 @@ class SynonymsSkill(MycroftSkill):
             #     self.bus.emit(Message("recognizer_loop:utterance", payload))
 
             LOG.info(message.data)
-            pref_speech = self.preference_speech(message)
-            LOG.info(pref_speech['synonyms'].items())
-            syn_exists = [x for x, y in pref_speech['synonyms'].items()
-                          if message.data.get('utterances')[0] in y
-                          and message.data.get('utterances')[0] != x]
+            # pref_speech = self.preference_speech(message)
+            # LOG.info(self.preference_skill(message).items())
+            syn_exists = [x for x, y in self.preference_skill(message).get("synonyms").items()
+                          if sentence in [sentence.lower() for sentence in y]]
+            LOG.debug(syn_exists)
             # if not syn_exists:
             #     return False
         else:

@@ -1,0 +1,8 @@
+skillMetadata:
+  sections:
+    - name: Internal Settings
+      fields:
+        - name: synonyms
+          type: dict
+          label: Synonyms
+          value: {}
