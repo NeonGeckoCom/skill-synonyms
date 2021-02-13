@@ -1,0 +1,39 @@
+{
+    "title": "Synonyms",
+    "url": "https://github.com/NeonGeckoCom/synonyms.neon",
+    "summary": "This skill handles setting and calling synonym commands",
+    "short_description": "This skill handles setting and calling synonym commands",
+    "description": "You may define a phrase as a synonym for a Neon command. This skill handles creating synonym phrases as well as handling heard synonyms",
+    "examples": [
+        "make 'good morning' a synonym for what is the weather."
+    ],
+    "desktopFile": false,
+    "warning": "",
+    "systemDeps": false,
+    "requirements": {
+        "python": [],
+        "system": {},
+        "skill": []
+    },
+    "platforms": [
+        "i386",
+        "x86_64",
+        "ia64",
+        "arm64",
+        "arm"
+    ],
+    "branch": "master",
+    "license": "NeonAI License v1.0",
+    "icon": "https://0000.us/klatchat/app/files/neon_images/icons/neon_skill.png",
+    "category": "",
+    "categories": [
+        ""
+    ],
+    "tags": [
+        ""
+    ],
+    "skillname": "Synonyms",
+    "authorname": "Neon",
+    "foldername": "synonyms.neon",
+    "download_url": "https://api.github.com/repos/NeonGeckoCom/synonyms.neon/zipball/master"
+}
