@@ -78,7 +78,8 @@ class SynonymsSkill(MycroftSkill):
                             LOG.info(f"{cmd_phrase}: {syn_phrases}")
                             updated_synonyms = {**self.preference_skill(message).get("synonyms"), **{cmd_phrase: syn_phrases}}
                             LOG.debug(f"synonyms={updated_synonyms}")
-                            self.ngi_settings.update_yaml_file("synonyms", value=updated_synonyms, final=True)
+                            self.update_skill_settings({"synonyms": updated_synonyms}, message)
+                            # self.ngi_settings.update_yaml_file("synonyms", value=updated_synonyms, final=True)
                             # if self.server:
                             #     user_dict = self.build_user_dict(message)
                             #     user_dict["synonyms"] = updated_synonyms
