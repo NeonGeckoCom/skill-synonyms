@@ -181,7 +181,8 @@ class SynonymsSkill(MycroftSkill):
             LOG.error(e)
             return
 
-    def converse(self, utterances, lang="en-us", message=None):
+    def converse(self, message=None):
+        utterances = message.data.get("utterances")
         LOG.debug(f"Check Synonyms: {utterances}")
         if not utterances:
             return False
