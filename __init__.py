@@ -16,13 +16,11 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+
 from mycroft import Message
-from mycroft.skills.core import MycroftSkill  # , intent_handler
-# from adapt.intent import IntentBuilder
+from mycroft.skills.core import MycroftSkill
 from mycroft.skills.skill_data import read_vocab_file
 from mycroft.util.log import LOG
-# import re
-# from mycroft.messagebus.message import Message
 
 
 class SynonymsSkill(MycroftSkill):
@@ -35,25 +33,39 @@ class SynonymsSkill(MycroftSkill):
 
     def initialize(self):
         self.make_active(-1)
-        # try:
-        #     self.add_event('SS_new_syn', self._add_synonym)
-        #     self.make_active(-1)
-        # except Exception as e:
-        #     LOG.error(e)
+        self.add_event('neon.change_synonym', self._handle_synonym_event)
+        # TODO: Intent for removing synonyms DM
 
-        # self.add_event('recognizer_loop:utterance', self.handle_syn_utterance)
+    def converse(self, message=None):
+        utterances = message.data.get("utterances")
+        LOG.debug(f"Check Synonyms: {utterances}")
+        # Nothing to evaluate
+        if not utterances:
+            return False
+        # Script command, don't try
+        if message.context.get("cc_data", {}).get("execute_from_script"):
+            return False
+        try:
+            handled_as_existing = self._check_utterance_is_synonym(message)
+            if handled_as_existing:
+                return True
+        except Exception as e:
+            LOG.error(e)
 
-    # @intent_handler(IntentBuilder("add_synonym").require("syn_phrase").require("cmd_phrase"))
-    # def add_syn_intent(self, message):
-    #     """
-    #     Intent handler for "make `x` a synonym for `y`
-    #     :param message: message object associated with request
-    #     """
-    #     # cmd_phrase, syn_phrase = '', ''
-    #     LOG.info(message.data)
-    #     syn_phrase = (message.data.get("syn_phrase"))
-    #     cmd_phrase = message.data.get("cmd_phrase")
-    #     self._add_synonym(message, syn_phrase, cmd_phrase)
+        if self.voc_match(utterances[0], "synonym"):
+            LOG.info(f"Potential New Synonym")
+            phrases = self._parse_synonym_and_command_phrases(utterances[0])
+            if phrases:
+                self._add_synonym(message, phrases[0], phrases[1])
+                return True
+        return False
+
+    def _handle_synonym_event(self, message):
+        add = message.data.get("add")
+        trigger = message.data.get("trigger")
+        command = message.data.get("command")
+        if add and trigger and command:
+            self._add_synonym(message, trigger, command)
 
     def _parse_synonym_and_command_phrases(self, utterance: str) -> (str, str):
         """
@@ -65,18 +77,17 @@ class SynonymsSkill(MycroftSkill):
 
         try:
             trigger, command = utterance.split(f" {matched_syn_words[0]} ", 1)
+            # Cleanup set/for vocab from detected phrases
             if trigger.split()[0] in self.set_words:
                 trigger = " ".join(trigger.split()[1:])
             if command.split()[0] in self.for_words:
                 command = " ".join(command.split()[1:])
-
-            # TODO: Voc match for these particles DM
+            # Remove any trailing words in trigger phrase (as, a, etc)
             trigger_words = trigger.split()
-            if trigger_words[-1] == "a":
-                trigger_words.pop(-1)
-            if trigger_words[-1] == "as":
+            while self.voc_match(trigger_words[-1], "particles"):
                 trigger_words.pop(-1)
             trigger = " ".join(trigger_words)
+            # Return parsed trigger and command
             if trigger and command:
                 return trigger, command
         except Exception as e:
@@ -130,14 +141,10 @@ class SynonymsSkill(MycroftSkill):
                                        "cmd_phrase": command_phrase}, private=True)
                     LOG.info(trigger_phrase)
                     LOG.info(self.preference_skill(message).get("synonyms")[command_phrase])
-                    # if not isinstance(trigger_phrase, list):
-                    #     trigger_phrase = [trigger_phrase]
                     trigger_phrases = [trigger_phrase]
                     trigger_phrases.extend(self.preference_skill(message).get("synonyms")[command_phrase])
                     # LOG.info(trigger_phrase)
                     LOG.info(self.preference_skill(message).get("synonyms")[command_phrase])
-                # if not trigger_phrase and not command_phrase:
-                #     raise TypeError
 
                 updated_synonyms = {**skill_prefs.get("synonyms"),
                                     **{command_phrase: trigger_phrases}}
@@ -152,28 +159,7 @@ class SynonymsSkill(MycroftSkill):
             LOG.error(e)
             return
 
-    def converse(self, message=None):
-        utterances = message.data.get("utterances")
-        LOG.debug(f"Check Synonyms: {utterances}")
-        if not utterances:
-            return False
-        # TODO: Check for signal user running script and return false
-        try:
-            handled_as_existing = self.handle_syn_utterance(message)
-            if handled_as_existing:
-                return True
-        except Exception as e:
-            LOG.error(e)
-
-        if self.voc_match(utterances[0], "synonym"):
-            LOG.info(f"Potential New Synonym")
-            phrases = self._parse_synonym_and_command_phrases(utterances[0])
-            if phrases:
-                self._add_synonym(message, phrases[0], phrases[1])
-                return True
-        return False
-
-    def handle_syn_utterance(self, message):
+    def _check_utterance_is_synonym(self, message):
         """
         Handler that filters incoming messages and checks if a synonym should be emitted in place of incoming utterance
         :param message: Incoming payload object
