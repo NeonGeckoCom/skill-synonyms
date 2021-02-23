@@ -107,9 +107,10 @@ class SynonymsSkill(MycroftSkill):
         """
         try:
             skill_prefs = self.preference_skill(message)
+            if not skill_prefs.get("synonyms"):
+                skill_prefs["synonyms"] = {}
             # Check if spoken request is a valid synonym pair
             if trigger_phrase != command_phrase:
-
                 # Requested Trigger already exists as a Command
                 # TODO: Does this preclude it as a trigger?
                 if trigger_phrase in skill_prefs.get("synonyms").keys():
@@ -171,7 +172,7 @@ class SynonymsSkill(MycroftSkill):
             sentence = message.data.get('utterances')[0].lower()
             LOG.info(sentence)
 
-            syn_exec_phrase = [x for x, y in self.preference_skill(message).get("synonyms").items()
+            syn_exec_phrase = [x for x, y in self.preference_skill(message).get("synonyms", {}).items()
                                if sentence in [sentence.lower() for sentence in y]]
             LOG.debug(syn_exec_phrase)
         else:
