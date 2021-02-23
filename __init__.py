@@ -21,6 +21,7 @@ from mycroft import Message
 from mycroft.skills.core import MycroftSkill
 from mycroft.skills.skill_data import read_vocab_file
 from mycroft.util.log import LOG
+from neon_utils import skill_needs_patching, stub_missing_parameters
 
 
 class SynonymsSkill(MycroftSkill):
@@ -30,6 +31,8 @@ class SynonymsSkill(MycroftSkill):
                           for word in w_list]
         self.set_words = [word for w_list in read_vocab_file(self.find_resource('set.voc', 'vocab')) for word in w_list]
         self.for_words = [word for w_list in read_vocab_file(self.find_resource('for.voc', 'vocab')) for word in w_list]
+        if skill_needs_patching(self):
+            stub_missing_parameters(self)
 
     def initialize(self):
         self.make_active(-1)
