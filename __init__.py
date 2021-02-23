@@ -109,59 +109,47 @@ class SynonymsSkill(MycroftSkill):
             skill_prefs = self.preference_skill(message)
             if not skill_prefs.get("synonyms"):
                 skill_prefs["synonyms"] = {}
+
             # Check if spoken request is a valid synonym pair
-            if trigger_phrase != command_phrase:
-                # Requested Trigger already exists as a Command
-                # TODO: Does this preclude it as a trigger?
-                if trigger_phrase in skill_prefs.get("synonyms").keys():
-                    self.speak_dialog('new_is_another_key', {"syn_phrase": trigger_phrase.title()}, private=True)
-                    return
-                # Requested Trigger is already a Trigger
-                if trigger_phrase in skill_prefs.get("synonyms").values():
-                    self.speak_dialog('new_is_another_value',
-                                      {"syn_phrase": trigger_phrase.title(),
-                                       "cmd_phrase": [x for x, y in
-                                                      self.preference_skill(message).get("synonyms").items()
-                                                      if trigger_phrase in y][0]}, private=True)
-                    return
-                # New command being aliased
-                if command_phrase not in self.preference_skill(message).get("synonyms").keys():
-                    self.speak_dialog("new_synonym", {"syn_phrase": trigger_phrase,
-                                                      "cmd_phrase": command_phrase}, private=True)
-                    # if not isinstance(trigger_phrase, list):
-                    trigger_phrases = [trigger_phrase]
-                # Command has other triggers
-                else:
-                    # New trigger already exists  TODO: This should be handled above already? DM
-                    if trigger_phrase in self.preference_skill(message).get("synonyms")[command_phrase]:
-                        self.speak_dialog('already_exists', {"syn_phrase": trigger_phrase.title(),
+            if trigger_phrase == command_phrase:
+                self.speak_dialog('synonym_equals_command', {"syn_phrase": trigger_phrase,
                                                              "cmd_phrase": command_phrase}, private=True)
-                        return
-
-                    self.speak_dialog("already_filled",
-                                      {"syn_phrase": trigger_phrase,
-                                       'already_filled': ", ".join(self.preference_skill(message).get("synonyms")
-                                                                   [command_phrase]),
-                                       "cmd_phrase": command_phrase}, private=True)
-                    LOG.info(trigger_phrase)
-                    LOG.info(self.preference_skill(message).get("synonyms")[command_phrase])
-                    trigger_phrases = [trigger_phrase]
-                    trigger_phrases.extend(self.preference_skill(message).get("synonyms")[command_phrase])
-                    # LOG.info(trigger_phrase)
-                    LOG.info(self.preference_skill(message).get("synonyms")[command_phrase])
-
-                updated_synonyms = {**skill_prefs.get("synonyms"),
-                                    **{command_phrase: trigger_phrases}}
-                self.update_skill_settings({"synonyms": updated_synonyms}, message)
-
-            # This is not a valid spoken request
+                return
+            # Check if this exact synonym pair already exists
+            if trigger_phrase in skill_prefs["synonyms"].get(command_phrase, []):
+                self.speak_dialog('synonym_pair_already_exists', {"syn_phrase": trigger_phrase,
+                                                                  "cmd_phrase": command_phrase}, private=True)
+                return
+            # Requested Trigger is already a Trigger
+            if any([syns for syns in skill_prefs["synonyms"].values() if trigger_phrase in syns]):
+                match = [x for x, y in skill_prefs["synonyms"].items() if trigger_phrase in y][0]
+                self.speak_dialog('synonym_pair_already_exists', {"syn_phrase": trigger_phrase.title(),
+                                                                  "cmd_phrase": match}, private=True)
+                return
+            # New command being aliased
+            if command_phrase not in skill_prefs["synonyms"].keys():
+                self.speak_dialog("new_synonym_command", {"syn_phrase": trigger_phrase,
+                                                          "cmd_phrase": command_phrase}, private=True)
+                trigger_phrases = [trigger_phrase]
+            # Command has other triggers
             else:
-                self.speak_dialog('same_values', {"syn_phrase": trigger_phrase.title(),
-                                                  "cmd_phrase": command_phrase}, private=True)
+                # New trigger already exists
+                self.speak_dialog("add_synonym_command",
+                                  {"syn_phrase": trigger_phrase,
+                                   'already_filled': ", ".join(skill_prefs["synonyms"][command_phrase]),
+                                   "cmd_phrase": command_phrase}, private=True)
+                # LOG.info(trigger_phrase)
+                # LOG.info(skill_prefs["synonyms"][command_phrase])
+                trigger_phrases = skill_prefs["synonyms"][command_phrase]
+                trigger_phrases.append(trigger_phrase)
+
+            LOG.info(skill_prefs["synonyms"][command_phrase])
+            updated_synonyms = {**skill_prefs["synonyms"],
+                                **{command_phrase: trigger_phrases}}
+            self.update_skill_settings({"synonyms": updated_synonyms}, message)
         except TypeError as e:
             LOG.error(f'Error adding {trigger_phrase} -> {command_phrase}')
             LOG.error(e)
-            return
 
     def _check_utterance_is_synonym(self, message):
         """
@@ -178,10 +166,11 @@ class SynonymsSkill(MycroftSkill):
         else:
             syn_exec_phrase = False
         LOG.info(syn_exec_phrase)
-        if syn_exec_phrase:
+        if syn_exec_phrase and len(syn_exec_phrase) > 0:
             LOG.info(syn_exec_phrase)
             message.context["neon_should_respond"] = True
-            self.bus.emit(message.forward("recognizer_loop:utterance", {"utterances": syn_exec_phrase}))
+            self.bus.emit(message.forward("recognizer_loop:utterance", {"utterances": syn_exec_phrase,
+                                                                        "lang": message.data.get("lang", "en-us")}))
             return True
         return False
 
