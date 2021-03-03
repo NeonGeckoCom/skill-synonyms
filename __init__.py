@@ -17,236 +17,161 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from mycroft.skills.core import MycroftSkill, intent_handler
-from adapt.intent import IntentBuilder
+from mycroft import Message
+from mycroft.skills.core import MycroftSkill
+from mycroft.skills.skill_data import read_vocab_file
 from mycroft.util.log import LOG
-import re
-from mycroft.messagebus.message import Message
+from neon_utils import skill_needs_patching, stub_missing_parameters
 
 
 class SynonymsSkill(MycroftSkill):
     def __init__(self):
         super(SynonymsSkill, self).__init__(name="SynonymSkill")
+        self.syn_words = [word for w_list in read_vocab_file(self.find_resource('synonym.voc', 'vocab'))
+                          for word in w_list]
+        self.set_words = [word for w_list in read_vocab_file(self.find_resource('set.voc', 'vocab')) for word in w_list]
+        self.for_words = [word for w_list in read_vocab_file(self.find_resource('for.voc', 'vocab')) for word in w_list]
+        if skill_needs_patching(self):
+            stub_missing_parameters(self)
 
     def initialize(self):
-        try:
-            self.add_event('SS_new_syn', self._add_synonym)
-            self.make_active(-1)
-        except Exception as e:
-            LOG.error(e)
+        self.make_active(-1)
+        self.add_event('neon.change_synonym', self._handle_synonym_event)
+        # TODO: Intent for removing synonyms DM
 
-        # self.add_event('recognizer_loop:utterance', self.handle_syn_utterance)
-
-    @intent_handler(IntentBuilder("add_synonym").require("syn_phrase").require("cmd_phrase"))
-    def add_syn_intent(self, message):
-        """
-        Intent handler for "make `x` a synonym for `y`
-        :param message: message object associated with request
-        """
-        # cmd_phrase, syn_phrase = '', ''
-        LOG.info(message.data)
-        syn_phrase = (message.data.get("syn_phrase"))
-        cmd_phrase = message.data.get("cmd_phrase")
-        self._add_synonym(message, syn_phrase, cmd_phrase)
-
-    def _add_synonym(self, message, syn_phrase=None, cmd_phrase=None):
-        """
-        Parse synonym and add to configuration
-        :param message: message associated with request (
-        :param syn_phrase: optional string phrase to listen for
-        :param cmd_phrase: optional string command to execute when syn_phrase is heard
-        :return:
-        """
-        try:
-            # Parse and add emitted synonyms (not skill intent)
-            if not syn_phrase or not cmd_phrase:
-                # This has a parsed pair from CC skill script
-                if message.context.get("origin") == "custom-conversation.neon":
-                    syn_phrases = message.data.get("cc_synonyms")  # List of synonyms
-                    cmd_phrase = message.data.get("cmd_phrase")  # Command to execute on synonym
-                    LOG.info(syn_phrases)
-                    LOG.info(cmd_phrase)
-                    # if isinstance(syn_phrase, list):
-                    try:
-                        # if new != self.user_info_available['speech']['synonyms'][existing]:
-                        #     new.extend(self.user_info_available['speech']['synonyms'][existing])
-
-                        # This list is different than the existing one, update config
-                        if syn_phrases != self.preference_skill(message).get("synonyms").get(cmd_phrase):
-                            old_synonyms = self.preference_skill(message).get("synonyms").get(cmd_phrase, [])
-                            list(syn_phrases).extend(old_synonyms)
-                            LOG.info(f"{cmd_phrase}: {syn_phrases}")
-                            updated_synonyms = {**self.preference_skill(message).get("synonyms"), **{cmd_phrase: syn_phrases}}
-                            LOG.debug(f"synonyms={updated_synonyms}")
-                            self.ngi_settings.update_yaml_file("synonyms", value=updated_synonyms, final=True)
-                            # if self.server:
-                            #     user_dict = self.build_user_dict(message)
-                            #     user_dict["synonyms"] = updated_synonyms
-                            #     self.socket_io_emit(event="update profile", kind="skill",
-                            #                         flac_filename=message.context["flac_filename"], message=user_dict)
-                            # else:
-                            #     # Update local synonyms dict
-                            #     self.user_info_available["speech"]["synonyms"] = updated_synonyms
-                            #     # Write file changes
-                            #     self.user_config.update_yaml_file(header='speech', sub_header='synonyms',
-                            #                                       value=updated_synonyms)
-
-                            # Don't need to emit because no other skill cares about synonyms
-                            # self.bus.emit(Message('check.yml.updates',
-                            #                       {"modified": ["ngi_user_info"]}, {"origin": "synonyms.neon"}))
-                            # syn_phrase.extend(pref_speech['synonyms'][cmd_phrase])
-                    except Exception as e:
-                        LOG.error(e)
-
-                # TODO Utterances are emitted pre-skills parsing and picked up here. Handle better DM
-                else:
-                    LOG.error(f"Got message in synonym intent: {message.data}")
-                    LOG.info(message.data)
-                    to_parse = message.data.get('utterances')[0]
-                    LOG.info(to_parse)
-                    pattern = re.compile(r'(make|set|add)\s+(?P<syn_phrase>.*)\sas (a|\s)+synonym\s+(to|for)\s+'
-                                         r'(?P<cmd_phrase>.*)').finditer(to_parse)
-                    for i in pattern:
-                        syn_phrase = (i.group("syn_phrase")).rstrip()
-                        cmd_phrase = (i.group("cmd_phrase")).rstrip()
-                    LOG.info(syn_phrase)
-                    LOG.info(cmd_phrase)
-                    if not syn_phrase or not cmd_phrase:
-                        pattern = re.compile(r'(make|set|add)\s+(?P<syn_phrase>.*)a(s a|s|\s)*\s+synonym\s+(to|for)\s+'
-                                             r'(?P<cmd_phrase>.*)').finditer(to_parse)
-                        for i in pattern:
-                            syn_phrase = (i.group("syn_phrase")).rstrip()
-                            cmd_phrase = (i.group("cmd_phrase")).rstrip()
-                        LOG.info(syn_phrase)
-                        LOG.info(cmd_phrase)
-                    if not syn_phrase or not cmd_phrase:
-                        LOG.info('Invalid request')
-                        return
-
-            # Check if spoken request is a valid synonym pair
-            if syn_phrase != cmd_phrase:
-                if syn_phrase in self.preference_skill(message).get("synonyms").keys():
-                    self.speak_dialog('new_is_another_key', {"syn_phrase": syn_phrase.title()}, private=True)
-                    return
-                if syn_phrase in self.preference_skill(message).get("synonyms").values():
-                    self.speak_dialog('new_is_another_value',
-                                      {"syn_phrase": syn_phrase.title(),
-                                       "cmd_phrase": [x for x, y in self.preference_skill(message).get("synonyms").items()
-                                                      if syn_phrase in y][0]}, private=True)
-                    return
-                if cmd_phrase not in self.preference_skill(message).get("synonyms").keys():
-                    self.speak_dialog("new_synonym", {"syn_phrase": syn_phrase,
-                                                      "cmd_phrase": cmd_phrase}, private=True)
-                    if not isinstance(syn_phrase, list):
-                        syn_phrase = [syn_phrase]
-                else:
-                    if syn_phrase in self.preference_skill(message).get("synonyms")[cmd_phrase]:
-                        self.speak_dialog('already_exists', {"syn_phrase": syn_phrase.title(),
-                                                             "cmd_phrase": cmd_phrase}, private=True)
-                        return
-
-                    self.speak_dialog("already_filled",
-                                      {"syn_phrase": syn_phrase,
-                                       'already_filled': ", ".join(self.preference_skill(message).get("synonyms")[cmd_phrase]),
-                                       "cmd_phrase": cmd_phrase}, private=True)
-                    LOG.info(syn_phrase)
-                    LOG.info(self.preference_skill(message).get("synonyms")[cmd_phrase])
-                    if not isinstance(syn_phrase, list):
-                        syn_phrase = [syn_phrase]
-                    syn_phrase.extend(self.preference_skill(message).get("synonyms")[cmd_phrase])
-                    LOG.info(syn_phrase)
-                    LOG.info(self.preference_skill(message).get("synonyms")[cmd_phrase])
-                if not syn_phrase and not cmd_phrase:
-                    raise TypeError
-
-                updated_synonyms = {**self.preference_skill(message).get("synonyms"), **{cmd_phrase: syn_phrase}}
-                # TODO: Settings update write!
-                # if self.server:
-                #     user_dict = self.build_user_dict(message)
-                #     user_dict["synonyms"] = updated_synonyms
-                #     self.socket_io_emit(event="update profile", kind="skill",
-                #                         flac_filename=message.context["flac_filename"], message=user_dict)
-                # else:
-                #     self.user_config.update_yaml_file(header='speech', sub_header='synonyms', value=updated_synonyms)
-                #     self.bus.emit(Message('check.yml.updates',
-                #                           {"modified": ["ngi_user_info"]}, {"origin": "synonyms.neon"}))
-
-            # This is not a valid spoken request
-            else:
-                self.speak_dialog('same_values', {"syn_phrase": syn_phrase.title(),
-                                                  "cmd_phrase": cmd_phrase}, private=True)
-        except TypeError as e:
-            LOG.error(f'Error adding {syn_phrase} -> {cmd_phrase}')
-            LOG.error(e)
-            return
-
-    def converse(self, utterances, lang="en-us", message=None):
+    def converse(self, message=None):
+        utterances = message.data.get("utterances")
         LOG.debug(f"Check Synonyms: {utterances}")
+        # Nothing to evaluate
         if not utterances:
             return False
-        # TODO: Check for signal user running script and return false
+        # Script command, don't try
+        if message.context.get("cc_data", {}).get("execute_from_script"):
+            return False
         try:
-            handled_as_existing = self.handle_syn_utterance(message)
+            handled_as_existing = self._check_utterance_is_synonym(message)
             if handled_as_existing:
                 return True
         except Exception as e:
             LOG.error(e)
-        # TODO: Try adding new synonym here? DM
+
+        if self.voc_match(utterances[0], "synonym"):
+            LOG.info(f"Potential New Synonym")
+            phrases = self._parse_synonym_and_command_phrases(utterances[0])
+            if phrases:
+                self._add_synonym(message, phrases[0], phrases[1])
+                return True
         return False
 
-    def handle_syn_utterance(self, message):
+    def _handle_synonym_event(self, message):
+        add = message.data.get("add")
+        trigger = message.data.get("trigger")
+        command = message.data.get("command")
+        if add and trigger and command:
+            self._add_synonym(message, trigger, command)
+
+    def _parse_synonym_and_command_phrases(self, utterance: str) -> (str, str):
+        """
+        Try to parse out a synonym and command phrase from an incoming utterance
+        :param utterance: Raw user utterance containing 'synonym' to evaluate
+        :return: trigger_phrase, command_phrase parsed out of utterance or None
+        """
+        matched_syn_words = [word for word in utterance.split() if word in self.syn_words]
+
+        try:
+            trigger, command = utterance.split(f" {matched_syn_words[0]} ", 1)
+            # Cleanup set/for vocab from detected phrases
+            if trigger.split()[0] in self.set_words:
+                trigger = " ".join(trigger.split()[1:])
+            if command.split()[0] in self.for_words:
+                command = " ".join(command.split()[1:])
+            # Remove any trailing words in trigger phrase (as, a, etc)
+            trigger_words = trigger.split()
+            while self.voc_match(trigger_words[-1], "particles"):
+                trigger_words.pop(-1)
+            trigger = " ".join(trigger_words)
+            # Return parsed trigger and command
+            if trigger and command:
+                return trigger, command
+        except Exception as e:
+            LOG.error(e)
+        return None
+
+    def _add_synonym(self, message: Message, trigger_phrase: str, command_phrase: str):
+        """
+        Parse synonym and add to configuration
+        :param message: Message associated with request
+        :param trigger_phrase: Phrase to listen for
+        :param command_phrase: Command to execute when syn_phrase is heard
+        :return:
+        """
+        try:
+            skill_prefs = self.preference_skill(message)
+            if not skill_prefs.get("synonyms"):
+                skill_prefs["synonyms"] = {}
+
+            # Check if spoken request is a valid synonym pair
+            if trigger_phrase == command_phrase:
+                self.speak_dialog('synonym_equals_command', {"syn_phrase": trigger_phrase,
+                                                             "cmd_phrase": command_phrase}, private=True)
+                return
+            # Check if this exact synonym pair already exists
+            if trigger_phrase in skill_prefs["synonyms"].get(command_phrase, []):
+                self.speak_dialog('synonym_pair_already_exists', {"syn_phrase": trigger_phrase,
+                                                                  "cmd_phrase": command_phrase}, private=True)
+                return
+            # Requested Trigger is already a Trigger
+            if any([syns for syns in skill_prefs["synonyms"].values() if trigger_phrase in syns]):
+                match = [x for x, y in skill_prefs["synonyms"].items() if trigger_phrase in y][0]
+                self.speak_dialog('synonym_pair_already_exists', {"syn_phrase": trigger_phrase.title(),
+                                                                  "cmd_phrase": match}, private=True)
+                return
+            # New command being aliased
+            if command_phrase not in skill_prefs["synonyms"].keys():
+                self.speak_dialog("new_synonym_command", {"syn_phrase": trigger_phrase,
+                                                          "cmd_phrase": command_phrase}, private=True)
+                trigger_phrases = [trigger_phrase]
+            # Command has other triggers
+            else:
+                # New trigger already exists
+                self.speak_dialog("add_synonym_command",
+                                  {"syn_phrase": trigger_phrase,
+                                   'already_filled': ", ".join(skill_prefs["synonyms"][command_phrase]),
+                                   "cmd_phrase": command_phrase}, private=True)
+                # LOG.info(trigger_phrase)
+                # LOG.info(skill_prefs["synonyms"][command_phrase])
+                trigger_phrases = skill_prefs["synonyms"][command_phrase]
+                trigger_phrases.append(trigger_phrase)
+
+            LOG.info(skill_prefs["synonyms"][command_phrase])
+            updated_synonyms = {**skill_prefs["synonyms"],
+                                **{command_phrase: trigger_phrases}}
+            self.update_skill_settings({"synonyms": updated_synonyms}, message)
+        except TypeError as e:
+            LOG.error(f'Error adding {trigger_phrase} -> {command_phrase}')
+            LOG.error(e)
+
+    def _check_utterance_is_synonym(self, message):
         """
         Handler that filters incoming messages and checks if a synonym should be emitted in place of incoming utterance
         :param message: Incoming payload object
-        :return:
         """
-
-        # TODO: Substitutions currently handled in listener
         if message.data.get("utterances"):
             sentence = message.data.get('utterances')[0].lower()
             LOG.info(sentence)
 
-            # if [x for x in ['make', 'set', 'add'] if x in sentence] and 'synonym' in sentence:
-            #     payload = {
-            #         'utterances': sentence,
-            #         'flac_filename': message.context["flac_filename"]
-            #     }
-            #     self.bus.emit(Message("recognizer_loop:utterance", payload))
-
-            LOG.info(message.data)
-            # pref_speech = self.preference_speech(message)
-            # LOG.info(self.preference_skill(message).items())
-            syn_exists = [x for x, y in self.preference_skill(message).get("synonyms").items()
-                          if sentence in [sentence.lower() for sentence in y]]
-            LOG.debug(syn_exists)
-            # if not syn_exists:
-            #     return False
+            syn_exec_phrase = [x for x, y in self.preference_skill(message).get("synonyms", {}).items()
+                               if sentence in [sentence.lower() for sentence in y]]
+            LOG.debug(syn_exec_phrase)
         else:
-            syn_exists = False
-        LOG.info(syn_exists)
-        if syn_exists:
-            LOG.info(syn_exists)
-            # audiofile = message.data.get("cc_data", {}).get("audio_file")
-            # TODO: This should probably be a message.reply to preserve all context. DM
-            # payload = message.context
-            # payload['utterances'] = syn_exists
-            # payload.get('cc_data', {})["execute_utterance"] = True
+            syn_exec_phrase = False
+        LOG.info(syn_exec_phrase)
+        if syn_exec_phrase and len(syn_exec_phrase) > 0:
+            LOG.info(syn_exec_phrase)
             message.context["neon_should_respond"] = True
-            self.bus.emit(message.forward("recognizer_loop:utterance", {"utterances": syn_exists,
-                                                                        "Neon": True}))
+            self.bus.emit(message.forward("recognizer_loop:utterance", {"utterances": syn_exec_phrase,
+                                                                        "lang": message.data.get("lang", "en-us")}))
             return True
-            # message.data["utterances"] = syn_exists
-            # message.context.get("cc_data", {})["execute_utterance"] = True
-            # payload = {
-            #     'utterances': syn_exists,
-            #     'flac_filename': message.context["flac_filename"],
-            #     "cc_data": {"speak_execute": syn_exists,
-            #                 "execute_utterance": True,
-            #                 "audio_file": audiofile,
-            #                 "raw_utterance": sentence
-            #                 }
-            # }
-            # self.bus.emit(Message("recognizer_loop:utterance", payload))
         return False
 
     def stop(self):
