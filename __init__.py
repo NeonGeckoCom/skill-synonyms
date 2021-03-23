@@ -45,6 +45,8 @@ class SynonymsSkill(MycroftSkill):
         # Nothing to evaluate
         if not utterances:
             return False
+        if len(self.preference_skill(message).get("synonyms", {})) == 0:
+            return False
         # Script command, don't try
         if message.context.get("cc_data", {}).get("execute_from_script"):
             return False
