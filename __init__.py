@@ -46,8 +46,6 @@ class SynonymsSkill(NeonSkill):
         # Nothing to evaluate
         if not utterances:
             return False
-        if len(self.preference_skill(message).get("synonyms", {})) == 0:
-            return False
         # Script command, don't try
         if message.context.get("cc_data", {}).get("execute_from_script"):
             return False
@@ -159,6 +157,8 @@ class SynonymsSkill(NeonSkill):
         Handler that filters incoming messages and checks if a synonym should be emitted in place of incoming utterance
         :param message: Incoming payload object
         """
+        if len(self.preference_skill(message).get("synonyms", {})) == 0:
+            return False
         if message.data.get("utterances"):
             sentence = message.data.get('utterances')[0].lower()
             LOG.info(sentence)
