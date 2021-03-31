@@ -144,7 +144,7 @@ class SynonymsSkill(NeonSkill):
                 trigger_phrases = skill_prefs["synonyms"][command_phrase]
                 trigger_phrases.append(trigger_phrase)
 
-            LOG.info(skill_prefs["synonyms"][command_phrase])
+            LOG.info(skill_prefs["synonyms"].get(command_phrase))
             updated_synonyms = {**skill_prefs["synonyms"],
                                 **{command_phrase: trigger_phrases}}
             self.update_skill_settings({"synonyms": updated_synonyms}, message)
