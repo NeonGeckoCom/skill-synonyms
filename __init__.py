@@ -17,22 +17,23 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from mycroft import Message
-from mycroft.skills.core import MycroftSkill
+from mycroft_bus_client import Message
+# from mycroft.skills.core import MycroftSkill
 from mycroft.skills.skill_data import read_vocab_file
-from mycroft.util.log import LOG
-from neon_utils import skill_needs_patching, stub_missing_parameters
+# from mycroft.util.log import LOG
+# from neon_utils import skill_needs_patching, stub_missing_parameters
+from neon_utils.skills.neon_skill import NeonSkill, LOG
 
 
-class SynonymsSkill(MycroftSkill):
+class SynonymsSkill(NeonSkill):
     def __init__(self):
         super(SynonymsSkill, self).__init__(name="SynonymSkill")
         self.syn_words = [word for w_list in read_vocab_file(self.find_resource('synonym.voc', 'vocab'))
                           for word in w_list]
         self.set_words = [word for w_list in read_vocab_file(self.find_resource('set.voc', 'vocab')) for word in w_list]
         self.for_words = [word for w_list in read_vocab_file(self.find_resource('for.voc', 'vocab')) for word in w_list]
-        if skill_needs_patching(self):
-            stub_missing_parameters(self)
+        # if skill_needs_patching(self):
+        #     stub_missing_parameters(self)
 
     def initialize(self):
         self.make_active(-1)
