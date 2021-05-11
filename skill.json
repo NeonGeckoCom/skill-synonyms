@@ -1,17 +1,19 @@
 {
     "title": "Synonyms",
     "url": "https://github.com/NeonGeckoCom/synonyms.neon",
-    "summary": "This skill handles setting and calling synonym commands",
-    "short_description": "This skill handles setting and calling synonym commands",
-    "description": "You may define a phrase as a synonym for a Neon command. This skill handles creating synonym phrases as well as handling heard synonyms",
+    "summary": "This skill handles setting and calling synonym (aliased) commands.",
+    "short_description": "This skill handles setting and calling synonym (aliased) commands.",
+    "description": "You may define a phrase as a synonym for a Neon command. Any time you ask something, this skill will check to see if it is a synonym for something else and complete that other action.",
     "examples": [
-        "make 'good morning' a synonym for what is the weather."
+        "make 'good morning' a synonym for 'what is the weather'"
     ],
     "desktopFile": false,
     "warning": "",
     "systemDeps": false,
     "requirements": {
-        "python": [],
+        "python": [
+            "git+https://github.com/neongeckocom/neon-skill-utils"
+        ],
         "system": {},
         "skill": []
     },
@@ -25,16 +27,20 @@
     ],
     "branch": "master",
     "license": "NeonAI License v1.0",
-    "icon": "https://0000.us/klatchat/app/files/neon_images/icons/neon_skill.png",
-    "category": "",
+    "icon": "logo.svg",
+    "category": "Daily",
     "categories": [
-        ""
+        "Daily",
+        "Productivity"
     ],
     "tags": [
-        ""
+        "NeonGecko",
+        "NeonAI",
+        "synonym",
+        "alias",
+        "commands"
     ],
     "skillname": "Synonyms",
     "authorname": "Neon",
-    "foldername": "synonyms.neon",
-    "download_url": "https://api.github.com/repos/NeonGeckoCom/synonyms.neon/zipball/master"
+    "foldername": "synonyms.neon"
 }
