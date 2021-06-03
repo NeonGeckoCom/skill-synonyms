@@ -25,7 +25,7 @@
         "arm64",
         "arm"
     ],
-    "branch": "master",
+    "branch": "dev",
     "license": "NeonAI License v1.0",
     "icon": "logo.svg",
     "category": "Daily",
@@ -42,5 +42,5 @@
     ],
     "skillname": "Synonyms",
     "authorname": "Neon",
-    "foldername": "synonyms.neon"
+    "foldername": null
 }
