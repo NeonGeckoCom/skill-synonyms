@@ -1,6 +1,6 @@
 {
     "title": "Synonyms",
-    "url": "https://github.com/NeonGeckoCom/synonyms.neon",
+    "url": "https://github.com/NeonGeckoCom/skill-synonyms.git",
     "summary": "This skill handles setting and calling synonym (aliased) commands.",
     "short_description": "This skill handles setting and calling synonym (aliased) commands.",
     "description": "You may define a phrase as a synonym for a Neon command. Any time you ask something, this skill will check to see if it is a synonym for something else and complete that other action.",
@@ -26,7 +26,7 @@
         "arm"
     ],
     "branch": "master",
-    "license": "NeonAI License v1.0",
+    "license": "BSD-3-Clause",
     "icon": "logo.svg",
     "category": "Daily",
     "categories": [
@@ -39,6 +39,11 @@
         "synonym",
         "alias",
         "commands"
+    ],
+    "credits": [
+        "NeonDaniel",
+        "NeonGeckoCom",
+        "reginaneon"
     ],
     "skillname": "Synonyms",
     "authorname": "NeonGeckoCom",
