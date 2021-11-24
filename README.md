@@ -40,7 +40,7 @@ Use the [link](https://neongecko.com/ContactUs) or [submit an issue on GitHub](h
 Productivity
 
 ## Tags
-#NeonGecko
+#NeonGecko Original
 #NeonAI
 #synonym
 #alias
