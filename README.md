@@ -31,16 +31,16 @@ is a synonym for something else and complete that other action.
 Use the [link](https://neongecko.com/ContactUs) or [submit an issue on GitHub](https://help.github.com/en/articles/creating-an-issue)
 
 ## Credits
-@NeonGeckoCom
-@NeonDaniel
-@reginaneon
+[NeonDaniel](https://github.com/NeonDaniel)
+[NeonGeckoCom](https://github.com/NeonGeckoCom)
+[reginaneon](https://github.com/reginaneon)
 
 ## Category
 **Daily**
 Productivity
 
 ## Tags
-#NeonGecko
+#NeonGecko Original
 #NeonAI
 #synonym
 #alias
