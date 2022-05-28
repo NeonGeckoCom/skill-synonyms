@@ -3,28 +3,9 @@
 ## Summary
 This skill handles setting and calling synonym (aliased) commands.
 
-## Requirements
-
-No special required packages for this skill.
-
 ## Description
 You may define a phrase as a synonym for a Neon command. Any time you ask something, this skill will check to see if it 
 is a synonym for something else and complete that other action.
-
-## Examples
-
-- "Make 'good morning' a synonym for 'what is the weather'"
-
-
-## Details
-
-### Text
-       
-### Picture
-
-### Video
-
-  
 
 ## Contact Support
 
