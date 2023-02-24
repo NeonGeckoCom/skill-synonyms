@@ -27,11 +27,11 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from mycroft_bus_client import Message
-# from mycroft.skills.core import MycroftSkill
 from mycroft.skills.skill_data import read_vocab_file
-# from mycroft.util.log import LOG
-# from neon_utils import skill_needs_patching, stub_missing_parameters
-from neon_utils.skills.neon_skill import NeonSkill, LOG
+from ovos_utils import classproperty
+from ovos_utils.log import LOG
+from ovos_utils.process_utils import RuntimeRequirements
+from neon_utils.skills.neon_skill import NeonSkill
 
 
 class SynonymsSkill(NeonSkill):
@@ -43,6 +43,18 @@ class SynonymsSkill(NeonSkill):
         self.for_words = [word for w_list in read_vocab_file(self.find_resource('for.voc', 'vocab')) for word in w_list]
         # if skill_needs_patching(self):
         #     stub_missing_parameters(self)
+
+    @classproperty
+    def runtime_requirements(self):
+        return RuntimeRequirements(network_before_load=False,
+                                   internet_before_load=False,
+                                   gui_before_load=False,
+                                   requires_internet=False,
+                                   requires_network=False,
+                                   requires_gui=False,
+                                   no_internet_fallback=True,
+                                   no_network_fallback=True,
+                                   no_gui_fallback=True)
 
     def initialize(self):
         self.make_active(-1)
