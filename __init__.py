@@ -35,8 +35,8 @@ from neon_utils.skills.neon_skill import NeonSkill
 
 
 class SynonymsSkill(NeonSkill):
-    def __init__(self):
-        super(SynonymsSkill, self).__init__(name="SynonymSkill")
+    def __init__(self, **kwargs):
+        NeonSkill.__init__(self, **kwargs)
         self.syn_words = [word for w_list in read_vocab_file(self.find_resource('synonym.voc', 'vocab'))
                           for word in w_list]
         self.set_words = [word for w_list in read_vocab_file(self.find_resource('set.voc', 'vocab')) for word in w_list]
@@ -56,6 +56,7 @@ class SynonymsSkill(NeonSkill):
                                    no_network_fallback=True,
                                    no_gui_fallback=True)
 
+    # TODO: move to __init__ after ovos-workshop stable release
     def initialize(self):
         self.make_active(-1)
         self.add_event('neon.change_synonym', self._handle_synonym_event)
@@ -200,7 +201,3 @@ class SynonymsSkill(NeonSkill):
 
     def stop(self):
         pass
-
-
-def create_skill():
-    return SynonymsSkill()
