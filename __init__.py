@@ -27,7 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from ovos_bus_client import Message
-from mycroft.skills.skill_data import read_vocab_file
+from ovos_utils.file_utils import read_vocab_file
 from ovos_utils import classproperty
 from ovos_utils.log import LOG
 from ovos_utils.process_utils import RuntimeRequirements
@@ -37,10 +37,18 @@ from neon_utils.skills.neon_skill import NeonSkill
 class SynonymsSkill(NeonSkill):
     def __init__(self, **kwargs):
         NeonSkill.__init__(self, **kwargs)
-        self.syn_words = [word for w_list in read_vocab_file(self.find_resource('synonym.voc', 'vocab'))
+        self.syn_words = [word for w_list in
+                          read_vocab_file(self.find_resource('synonym.voc',
+                                                             'vocab'))
                           for word in w_list]
-        self.set_words = [word for w_list in read_vocab_file(self.find_resource('set.voc', 'vocab')) for word in w_list]
-        self.for_words = [word for w_list in read_vocab_file(self.find_resource('for.voc', 'vocab')) for word in w_list]
+        self.set_words = [word for w_list in
+                          read_vocab_file(self.find_resource('set.voc',
+                                                             'vocab'))
+                          for word in w_list]
+        self.for_words = [word for w_list in
+                          read_vocab_file(self.find_resource('for.voc',
+                                                             'vocab')) for
+                          word in w_list]
         # if skill_needs_patching(self):
         #     stub_missing_parameters(self)
 
@@ -99,7 +107,8 @@ class SynonymsSkill(NeonSkill):
         :param utterance: Raw user utterance containing 'synonym' to evaluate
         :return: trigger_phrase, command_phrase parsed out of utterance or None
         """
-        matched_syn_words = [word for word in utterance.split() if word in self.syn_words]
+        matched_syn_words = [word for word in utterance.split()
+                             if word in self.syn_words]
 
         try:
             trigger, command = utterance.split(f" {matched_syn_words[0]} ", 1)
@@ -120,7 +129,8 @@ class SynonymsSkill(NeonSkill):
             LOG.error(e)
         return None
 
-    def _add_synonym(self, message: Message, trigger_phrase: str, command_phrase: str):
+    def _add_synonym(self, message: Message, trigger_phrase: str,
+                     command_phrase: str):
         """
         Parse synonym and add to configuration
         :param message: Message associated with request
@@ -135,31 +145,39 @@ class SynonymsSkill(NeonSkill):
 
             # Check if spoken request is a valid synonym pair
             if trigger_phrase == command_phrase:
-                self.speak_dialog('synonym_equals_command', {"syn_phrase": trigger_phrase,
-                                                             "cmd_phrase": command_phrase}, private=True)
+                self.speak_dialog('synonym_equals_command',
+                                  {"syn_phrase": trigger_phrase,
+                                     "cmd_phrase": command_phrase},
+                                  private=True)
                 return
             # Check if this exact synonym pair already exists
             if trigger_phrase in skill_prefs["synonyms"].get(command_phrase, []):
-                self.speak_dialog('synonym_pair_already_exists', {"syn_phrase": trigger_phrase,
-                                                                  "cmd_phrase": command_phrase}, private=True)
+                self.speak_dialog('synonym_pair_already_exists',
+                                  {"syn_phrase": trigger_phrase,
+                                   "cmd_phrase": command_phrase}, private=True)
                 return
             # Requested Trigger is already a Trigger
-            if any([syns for syns in skill_prefs["synonyms"].values() if trigger_phrase in syns]):
-                match = [x for x, y in skill_prefs["synonyms"].items() if trigger_phrase in y][0]
-                self.speak_dialog('synonym_pair_already_exists', {"syn_phrase": trigger_phrase.title(),
-                                                                  "cmd_phrase": match}, private=True)
+            if any([syns for syns in skill_prefs["synonyms"].values()
+                    if trigger_phrase in syns]):
+                match = [x for x, y in skill_prefs["synonyms"].items()
+                         if trigger_phrase in y][0]
+                self.speak_dialog('synonym_pair_already_exists',
+                                  {"syn_phrase": trigger_phrase.title(),
+                                   "cmd_phrase": match}, private=True)
                 return
             # New command being aliased
             if command_phrase not in skill_prefs["synonyms"].keys():
-                self.speak_dialog("new_synonym_command", {"syn_phrase": trigger_phrase,
-                                                          "cmd_phrase": command_phrase}, private=True)
+                self.speak_dialog("new_synonym_command",
+                                  {"syn_phrase": trigger_phrase,
+                                   "cmd_phrase": command_phrase}, private=True)
                 trigger_phrases = [trigger_phrase]
             # Command has other triggers
             else:
                 # New trigger already exists
                 self.speak_dialog("add_synonym_command",
                                   {"syn_phrase": trigger_phrase,
-                                   'already_filled': ", ".join(skill_prefs["synonyms"][command_phrase]),
+                                   'already_filled': ", ".join(
+                                       skill_prefs["synonyms"][command_phrase]),
                                    "cmd_phrase": command_phrase}, private=True)
                 # LOG.info(trigger_phrase)
                 # LOG.info(skill_prefs["synonyms"][command_phrase])
@@ -176,7 +194,8 @@ class SynonymsSkill(NeonSkill):
 
     def _check_utterance_is_synonym(self, message):
         """
-        Handler that filters incoming messages and checks if a synonym should be emitted in place of incoming utterance
+        Handler that filters incoming messages and checks if a synonym should be
+        emitted in place of incoming utterance
         :param message: Incoming payload object
         """
         if len(self.preference_skill(message).get("synonyms", {})) == 0:
@@ -185,8 +204,9 @@ class SynonymsSkill(NeonSkill):
             sentence = message.data.get('utterances')[0].lower()
             LOG.info(sentence)
 
-            syn_exec_phrase = [x for x, y in self.preference_skill(message).get("synonyms", {}).items()
-                               if sentence in [sentence.lower() for sentence in y]]
+            syn_exec_phrase = [x for x, y in self.preference_skill(message).
+                               get("synonyms", {}).items() if sentence in
+                               [sentence.lower() for sentence in y]]
             LOG.debug(syn_exec_phrase)
         else:
             syn_exec_phrase = False
@@ -194,8 +214,10 @@ class SynonymsSkill(NeonSkill):
         if syn_exec_phrase and len(syn_exec_phrase) > 0:
             LOG.info(syn_exec_phrase)
             message.context["neon_should_respond"] = True
-            self.bus.emit(message.forward("recognizer_loop:utterance", {"utterances": syn_exec_phrase,
-                                                                        "lang": message.data.get("lang", "en-us")}))
+            self.bus.emit(message.forward("recognizer_loop:utterance",
+                                          {"utterances": syn_exec_phrase,
+                                           "lang": message.data.get("lang",
+                                                                    "en-us")}))
             return True
         return False
 

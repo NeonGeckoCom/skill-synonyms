@@ -1,21 +1,12 @@
 # Changelog
 
-## [0.1.1a3](https://github.com/NeonGeckoCom/skill-synonyms/tree/0.1.1a3) (2023-06-15)
+## [1.0.1a1](https://github.com/NeonGeckoCom/skill-synonyms/tree/1.0.1a1) (2023-12-19)
 
-[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/0.1.1a2...0.1.1a3)
-
-**Merged pull requests:**
-
-- Deprecate create\_skill method and Update \_\_init\_\_ for best practices [\#32](https://github.com/NeonGeckoCom/skill-synonyms/pull/32) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [0.1.1a2](https://github.com/NeonGeckoCom/skill-synonyms/tree/0.1.1a2) (2023-06-14)
-
-[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/0.1.0...0.1.1a2)
+[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/1.0.0...1.0.1a1)
 
 **Merged pull requests:**
 
-- Update GH automation to best practices [\#31](https://github.com/NeonGeckoCom/skill-synonyms/pull/31) ([NeonDaniel](https://github.com/NeonDaniel))
-- Refactor mycroft-messagebus-client to ovos-bus-client [\#29](https://github.com/NeonGeckoCom/skill-synonyms/pull/29) ([NeonDaniel](https://github.com/NeonDaniel))
+- Refactor to resolve warnings [\#34](https://github.com/NeonGeckoCom/skill-synonyms/pull/34) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
