@@ -139,7 +139,7 @@ class SynonymsSkill(NeonSkill):
         :return:
         """
         try:
-            skill_prefs = self.preference_skill(message)
+            skill_prefs = self.settings
             if not skill_prefs.get("synonyms"):
                 skill_prefs["synonyms"] = {}
 
@@ -198,15 +198,15 @@ class SynonymsSkill(NeonSkill):
         emitted in place of incoming utterance
         :param message: Incoming payload object
         """
-        if len(self.preference_skill(message).get("synonyms", {})) == 0:
+        if len(self.settings.get("synonyms", {})) == 0:
             return False
         if message.data.get("utterances"):
             sentence = message.data.get('utterances')[0].lower()
             LOG.info(sentence)
 
-            syn_exec_phrase = [x for x, y in self.preference_skill(message).
-                               get("synonyms", {}).items() if sentence in
-                               [sentence.lower() for sentence in y]]
+            syn_exec_phrase = [x for x, y in
+                               self.settings.get("synonyms", {}).items() if
+                               sentence in [sentence.lower() for sentence in y]]
             LOG.debug(syn_exec_phrase)
         else:
             syn_exec_phrase = False
