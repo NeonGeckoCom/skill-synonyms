@@ -1,20 +1,20 @@
 # Changelog
 
-## [1.0.2a2](https://github.com/NeonGeckoCom/skill-synonyms/tree/1.0.2a2) (2024-02-07)
+## [1.0.3a2](https://github.com/NeonGeckoCom/skill-synonyms/tree/1.0.3a2) (2025-03-11)
 
-[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/1.0.2a1...1.0.2a2)
-
-**Merged pull requests:**
-
-- Refactor to remove deprecated references to `preference_skill` [\#37](https://github.com/NeonGeckoCom/skill-synonyms/pull/37) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.0.2a1](https://github.com/NeonGeckoCom/skill-synonyms/tree/1.0.2a1) (2024-02-06)
-
-[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/1.0.1...1.0.2a1)
+[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/1.0.3a1...1.0.3a2)
 
 **Merged pull requests:**
 
-- Support ovos-utils 0.1 [\#36](https://github.com/NeonGeckoCom/skill-synonyms/pull/36) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update automation, gitignore, and license notices [\#40](https://github.com/NeonGeckoCom/skill-synonyms/pull/40) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.0.3a1](https://github.com/NeonGeckoCom/skill-synonyms/tree/1.0.3a1) (2024-09-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/skill-synonyms/compare/1.0.2...1.0.3a1)
+
+**Merged pull requests:**
+
+- Update dependencies to allow for latest OVOS packages [\#39](https://github.com/NeonGeckoCom/skill-synonyms/pull/39) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
